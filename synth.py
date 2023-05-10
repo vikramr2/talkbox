@@ -25,7 +25,7 @@ def midi_callback(message):
         if message.note not in active_notes:
             # Create a new pyo object for the note
             freq = midiToHz(message.note)
-            osc = Osc(table=HannTable(), freq=freq, mul=0.3).out()
+            osc = Osc(table=SawTable(), freq=freq, mul=0.3).out()
             active_notes.append(message.note)
             active_objects.append(osc)
         else:
