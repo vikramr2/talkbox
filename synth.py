@@ -1,39 +1,57 @@
 import mido
-import numpy as np
 import sounddevice as sd
+import numpy as np
+from pyo import *
 
-# Constants for audio generation
-sample_rate = 44100
-duration = 0.2
+# Set up MIDI input
+mido.set_backend('mido.backends.rtmidi')  # Use rtmidi backend for MIDI I/O
+ports = mido.get_input_names()
+input_name = ports[1]  # Replace with the name of your MIDI input device
+input_port = mido.open_input(input_name)
+
+# Set up audio parameters
+s = Server().boot()
+s.start()
+
+# Global variables to store active notes and their associated pyo objects
+active_notes = []
+active_objects = []
 
 # MIDI callback function
 def midi_callback(message):
+    global active_notes, active_objects
+
     if message.type == 'note_on':
-        frequency = 440 * (2 ** ((message.note - 69) / 12))
-        t = np.linspace(0, duration, int(sample_rate * duration), endpoint=False)
-        audio = np.sin(2 * np.pi * frequency * t)  # Sawtooth wave generation
+        if message.note not in active_notes:
+            # Create a new pyo object for the note
+            freq = midiToHz(message.note)
+            osc = Osc(table=HannTable(), freq=freq, mul=0.3).out()
+            active_notes.append(message.note)
+            active_objects.append(osc)
+        else:
+            # If the note is already active, ignore the event
+            return
 
-        # Play the audio in real-time
-        sd.play(audio, sample_rate)
     elif message.type == 'note_off':
-        # Stop playing the audio
-        sd.stop()
+        if message.note in active_notes:
+            # Release the note if it is active
+            index = active_notes.index(message.note)
+            obj = active_objects[index]
+            obj.stop()
+            del active_objects[index]
+            del active_notes[index]
 
-ports = mido.get_input_names()
-print(ports)
-
-port_name = ports[1]
-port = mido.open_input(port_name)
-
-# Set the MIDI callback function
-port.callback = midi_callback
-
-# Keep the program running
+# Main loop to receive MIDI messages
 try:
     while True:
-        pass
+        for message in input_port.iter_pending():
+            midi_callback(message)
 except KeyboardInterrupt:
     pass
 
-# Close the MIDI port
-port.close()
+# Stop and close the pyo server
+s.stop()
+s.shutdown()
+
+# Close the MIDI input connection
+input_port.close()
