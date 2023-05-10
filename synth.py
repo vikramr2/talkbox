@@ -14,7 +14,7 @@ def midi_callback(message):
         audio = np.sin(2 * np.pi * frequency * t)  # Sawtooth wave generation
 
         # Play the audio in real-time
-        sd.play(audio, sample_rate)
+        sd.play(audio, sample_rate, device=2)
     elif message.type == 'note_off':
         # Stop playing the audio
         sd.stop()
