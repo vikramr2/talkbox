@@ -64,8 +64,12 @@ try:
         for message in input_port.iter_pending():
             midi_callback(message)
         if active_notes:
-            waveform = saw.sawtooth(buffer_size/sampling_rate, midi_to_frequency(list(active_notes.keys())[0]), sampling_rate, starting_y=active_notes[list(active_notes.keys())[0]])
-            active_notes[list(active_notes.keys())[0]] = waveform[-1]
+            waves = np.zeros(buffer_size)
+            for key in active_notes:
+                wave = saw.sawtooth(buffer_size/sampling_rate, midi_to_frequency(key), sampling_rate, starting_y=active_notes[key])
+                active_notes[key] = wave[-1]
+                waves = waves + wave
+            waveform = waves
         else:
             waveform = np.zeros(buffer_size)
         time.sleep(0.01)
