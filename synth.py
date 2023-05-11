@@ -37,12 +37,14 @@ def midi_callback(message):
         if message.note in active_notes:
             del active_notes[message.note]
 
-def callback(outdata, frames, time, status):
+def callback(indata, outdata, frames, time, status):
     outdata[:] = waveform.reshape(-1, 1)
+    mic_buffer[:] = indata.reshape(-1, 1).flatten()
 
 # Global variables
 sampling_rate = 44100
-buffer_size = 512
+buffer_size = 1024
+mic_buffer = np.zeros(buffer_size)
 
 # Set up MIDI input
 mido.set_backend('mido.backends.rtmidi')  # Use rtmidi backend for MIDI I/O
@@ -54,7 +56,7 @@ input_port = mido.open_input(input_name)
 active_notes = {}
 
 # Open a stream and start playing the waveform continuously
-stream = sd.OutputStream(callback=callback, channels=1, samplerate=sampling_rate, blocksize=buffer_size)
+stream = sd.Stream(callback=callback, channels=1, samplerate=sampling_rate, blocksize=buffer_size)
 stream.start()
 
 rec = []
