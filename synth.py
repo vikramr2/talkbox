@@ -44,6 +44,9 @@ def callback(indata, outdata, frames, time, status):
 # Global variables
 sampling_rate = 44100
 buffer_size = 1024
+winsize = 512
+hop_size = 128
+zero_pad = 16
 mic_buffer = np.zeros(buffer_size)
 
 # Set up MIDI input
@@ -72,7 +75,7 @@ try:
                 wave = saw.sawtooth(buffer_size/sampling_rate, midi_to_frequency(key), sampling_rate, starting_y=active_notes[key])
                 active_notes[key] = wave[-1]
                 waves = waves + wave
-            waveform = waves
+            waveform = cross_synthesis.cross_synthesize(mic_buffer, waves, winsize, hop_size, zero_pad)
         else:
             waveform = np.zeros(buffer_size)
         time.sleep(0.01)

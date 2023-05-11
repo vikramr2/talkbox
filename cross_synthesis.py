@@ -43,3 +43,15 @@ def compute_spectral_envelope(stft_matrix, smoothing_window_size, downsampling_f
     spectral_envelope = interpolated_spectrum / np.max(interpolated_spectrum)
 
     return spectral_envelope
+
+def cross_synthesize(modulator, carrier, winsize, hop_size, zero_pad):
+    window = np.hanning(winsize)
+    modulator_stft = stft(modulator, winsize, hop_size, zero_pad, window)
+    carrier_stft = stft(carrier, winsize, hop_size, zero_pad, window)
+    modulator_envelope = compute_spectral_envelope(modulator_stft, smoothing_window_size=1, downsampling_factor=1)
+    carrier_envelope = compute_spectral_envelope(carrier_stft, smoothing_window_size=1, downsampling_factor=1)
+    carrier_divided = carrier_stft*carrier_envelope
+    vocoded_stft = modulator_envelope * carrier_divided
+    window = np.hanning(winsize+zero_pad)
+    vocoded = istft(vocoded_stft, winsize, hop_size, zero_pad, window)
+    return vocoded
