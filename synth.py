@@ -4,6 +4,7 @@ import numpy as np
 import math
 import saw
 import time
+import cross_synthesis
 
 def midi_to_frequency(note_number):
     """

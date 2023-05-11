@@ -7,3 +7,4 @@ pip3 install python-rtmidi
 pip3 install numpy
 pip3 install --upgrade sounddevice
 pip3 install pyo
+pip3 install librosa
