@@ -28,7 +28,7 @@ def generate_sawtooth_wave(duration, frequency, sampling_rate, phase_shift=0):
     
     return np.round(sawtooth_wave, 2)
 
-def sawtooth(duration, frequency, sampling_rate, starting_y):
+def sawtooth(duration, frequency, sampling_rate, starting_y=0):
     # Calculate the number of samples
     num_samples = int(duration * sampling_rate)
     
@@ -39,5 +39,9 @@ def sawtooth(duration, frequency, sampling_rate, starting_y):
     # Finish the wave
     len_left = num_samples - len(start) - len(complete)
     finish = generate_sawtooth_wave(len_left/sampling_rate, frequency, sampling_rate)
-    
-    return np.append(np.append(start, complete), finish)
+
+    res = np.append(np.append(start, complete), finish)
+
+    if len(res) < num_samples:
+        res = np.append(res, [res[-1]]*(num_samples - len(res)))
+    return res
