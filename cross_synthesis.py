@@ -19,7 +19,7 @@ def stft( input_sound, dft_size, hop_size, zero_pad, window):
 def istft( stft_output, dft_size, hop_size, zero_pad, window):
     isft = np.fft.irfft(stft_output, n=dft_size+zero_pad) * np.array(window)
     n_frames = len(stft_output)
-    x = np.zeros(n_frames*hop_size+dft_size+zero_pad)
+    x = np.zeros((n_frames-1)*hop_size+dft_size+zero_pad)
     for i in range(n_frames):
         x[i*hop_size:i*hop_size+dft_size+zero_pad] += isft[i]
     # Return reconstructed waveform
@@ -48,9 +48,10 @@ def cross_synthesize(modulator, carrier, winsize, hop_size, zero_pad):
     window = np.hanning(winsize)
     modulator_stft = stft(modulator, winsize, hop_size, zero_pad, window)
     carrier_stft = stft(carrier, winsize, hop_size, zero_pad, window)
+    print(carrier_stft.shape)
     modulator_envelope = compute_spectral_envelope(modulator_stft, smoothing_window_size=1, downsampling_factor=1)
     carrier_envelope = compute_spectral_envelope(carrier_stft, smoothing_window_size=1, downsampling_factor=1)
-    carrier_divided = carrier_stft*carrier_envelope
+    carrier_divided = carrier_stft/carrier_envelope
     vocoded_stft = modulator_envelope * carrier_divided
     window = np.hanning(winsize+zero_pad)
     vocoded = istft(vocoded_stft, winsize, hop_size, zero_pad, window)

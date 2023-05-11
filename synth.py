@@ -2,9 +2,13 @@ import mido
 import sounddevice as sd
 import numpy as np
 import math
-import saw
 import time
+
+import saw
 import cross_synthesis
+
+from scipy.io.wavfile import write
+import matplotlib.pyplot as plt
 
 def midi_to_frequency(note_number):
     """
@@ -43,10 +47,10 @@ def callback(indata, outdata, frames, time, status):
 
 # Global variables
 sampling_rate = 44100
-buffer_size = 1024
+buffer_size = 512
 winsize = 512
-hop_size = 128
-zero_pad = 16
+hop_size = 512
+zero_pad = 0
 mic_buffer = np.zeros(buffer_size)
 
 # Set up MIDI input
@@ -65,6 +69,7 @@ stream.start()
 rec = []
 
 # Main loop to receive MIDI messages
+print("begin playing...")
 try:
     while True:
         for message in input_port.iter_pending():
@@ -75,13 +80,18 @@ try:
                 wave = saw.sawtooth(buffer_size/sampling_rate, midi_to_frequency(key), sampling_rate, starting_y=active_notes[key])
                 active_notes[key] = wave[-1]
                 waves = waves + wave
-            waveform = cross_synthesis.cross_synthesize(mic_buffer, waves, winsize, hop_size, zero_pad)
+            waveform = waveform[-1] + cross_synthesis.cross_synthesize(mic_buffer, waves, winsize, hop_size, zero_pad)
         else:
             waveform = np.zeros(buffer_size)
+        rec = np.append(rec, waveform)
         time.sleep(0.01)
         
 except KeyboardInterrupt:
     pass
+
+write(f'recording_{int(time.time())}.wav', sampling_rate, rec.astype(np.int16))
+plt.plot(rec)
+plt.show()
 
 # Stop and close the stream
 stream.stop()
