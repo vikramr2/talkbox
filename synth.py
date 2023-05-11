@@ -47,9 +47,9 @@ def callback(indata, outdata, frames, time, status):
 
 # Global variables
 sampling_rate = 44100
-buffer_size = 512
-winsize = 512
-hop_size = 512
+buffer_size = 1024
+winsize = 256
+hop_size = 256
 zero_pad = 0
 mic_buffer = np.zeros(buffer_size)
 
@@ -80,7 +80,7 @@ try:
                 wave = saw.sawtooth(buffer_size/sampling_rate, midi_to_frequency(key), sampling_rate, starting_y=active_notes[key])
                 active_notes[key] = wave[-1]
                 waves = waves + wave
-            waveform = waveform[-1] + cross_synthesis.cross_synthesize(mic_buffer, waves, winsize, hop_size, zero_pad)
+            waveform = cross_synthesis.cross_synthesize(mic_buffer, waves, winsize, hop_size, zero_pad)
         else:
             waveform = np.zeros(buffer_size)
         rec = np.append(rec, waveform)
@@ -89,7 +89,9 @@ try:
 except KeyboardInterrupt:
     pass
 
-write(f'recording_{int(time.time())}.wav', sampling_rate, rec.astype(np.int16))
+outfile = f'recording_{int(time.time())}.wav'
+write(outfile, sampling_rate, np.int16(outdata * 32767))
+
 plt.plot(rec)
 plt.show()
 

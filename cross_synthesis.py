@@ -2,6 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 from scipy.io import wavfile
 import librosa
+from scipy import signal
 
 def stft( input_sound, dft_size, hop_size, zero_pad, window):
     f = []
@@ -44,6 +45,7 @@ def compute_spectral_envelope(stft_matrix, smoothing_window_size, downsampling_f
 
     return spectral_envelope
 
+
 def cross_synthesize(modulator, carrier, winsize, hop_size, zero_pad):
     window = np.hanning(winsize)
     modulator_stft = stft(modulator, winsize, hop_size, zero_pad, window)
@@ -55,4 +57,4 @@ def cross_synthesize(modulator, carrier, winsize, hop_size, zero_pad):
     vocoded_stft = modulator_envelope * carrier_divided
     window = np.hanning(winsize+zero_pad)
     vocoded = istft(vocoded_stft, winsize, hop_size, zero_pad, window)
-    return vocoded
+    return vocoded #signal.convolve(vocoded, signal.firwin(128, [0.01, .3], pass_zero=False), mode='same')
